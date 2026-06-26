@@ -41,7 +41,7 @@
                 height: dp(24)
 
             Label:
-                text: u"₹ {:.0f}".format(root.today_total)
+                text: "Rs. {:.0f}".format(root.today_total)
                 font_size: sp(36)
                 bold: True
                 color: 1, 1, 1, 1
@@ -52,11 +52,11 @@
                 size_hint_y: None
                 height: dp(24)
                 Label:
-                    text: u"Limit: ₹ {:.0f}".format(root.daily_limit)
+                    text: "Limit: Rs. {:.0f}".format(root.daily_limit)
                     font_size: sp(13)
                     color: 0.5, 0.5, 0.6, 1
                 Label:
-                    text: u"Remaining: ₹ {:.0f}".format(root.remaining)
+                    text: "Remaining: Rs. {:.0f}".format(root.remaining)
                     font_size: sp(13)
                     color: root.status_color
 
@@ -134,7 +134,7 @@
             size_hint_y: 1
             RecycleView:
                 id: txn_list
-                data: [{'text': u"₹ {:.0f}  —  {}  [{}]".format(t.get('amount',0), t.get('merchant','Unknown'), t.get('category','Other'))} for t in root.transactions]
+                data: [{'text': "Rs.{:.0f} - {} [{}]".format(t.get('amount',0), t.get('merchant','Unknown'), t.get('category','Other'))} for t in root.transactions]
                 viewclass: 'TxnLabel'
                 RecycleBoxLayout:
                     orientation: 'vertical'

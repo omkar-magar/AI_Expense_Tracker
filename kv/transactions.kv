@@ -32,7 +32,7 @@
         # Transaction list
         ScrollView:
             RecycleView:
-                data: [{'txn_text': u"₹ {:.0f}  —  {}".format(t.get('amount',0), t.get('merchant','Unknown')), 'txn_detail': "{} | {} | {}".format(t.get('txn_time',''), t.get('category','Other'), t.get('source_app',''))} for t in root.transactions]
+                data: [{'txn_text': "Rs.{:.0f} - {}".format(t.get('amount',0), t.get('merchant','Unknown')), 'txn_detail': "{} | {} | {}".format(t.get('txn_time',''), t.get('category','Other'), t.get('source_app',''))} for t in root.transactions]
                 viewclass: 'TxnDetailItem'
                 RecycleBoxLayout:
                     orientation: 'vertical'
