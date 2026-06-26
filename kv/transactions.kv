@@ -1,0 +1,78 @@
+<TransactionsScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(16)
+        spacing: dp(12)
+        canvas.before:
+            Color:
+                rgba: 0.12, 0.12, 0.18, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        # Header
+        BoxLayout:
+            size_hint_y: None
+            height: dp(44)
+            Button:
+                text: "< Back"
+                size_hint_x: 0.3
+                background_color: 0, 0, 0, 0
+                color: 0.4, 0.6, 1, 1
+                font_size: sp(15)
+                on_release: root.manager.current = 'dashboard'
+            Label:
+                text: "Today's Transactions"
+                font_size: sp(18)
+                bold: True
+                color: 1, 1, 1, 1
+            Widget:
+                size_hint_x: 0.3
+
+        # Transaction list
+        ScrollView:
+            RecycleView:
+                data: [{'txn_text': u"₹ {:.0f}  —  {}".format(t.get('amount',0), t.get('merchant','Unknown')), 'txn_detail': "{} | {} | {}".format(t.get('txn_time',''), t.get('category','Other'), t.get('source_app',''))} for t in root.transactions]
+                viewclass: 'TxnDetailItem'
+                RecycleBoxLayout:
+                    orientation: 'vertical'
+                    default_size: None, dp(64)
+                    default_size_hint: 1, None
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: dp(6)
+
+        Label:
+            text: "{} transaction(s)".format(len(root.transactions))
+            font_size: sp(13)
+            color: 0.5, 0.5, 0.6, 1
+            size_hint_y: None
+            height: dp(24)
+
+
+<TxnDetailItem@BoxLayout>:
+    orientation: 'vertical'
+    txn_text: ''
+    txn_detail: ''
+    size_hint_y: None
+    height: dp(64)
+    padding: dp(10)
+    canvas.before:
+        Color:
+            rgba: 0.2, 0.2, 0.28, 1
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(8)]
+    Label:
+        text: root.txn_text
+        font_size: sp(15)
+        color: 1, 1, 1, 1
+        halign: 'left'
+        text_size: self.size
+    Label:
+        text: root.txn_detail
+        font_size: sp(12)
+        color: 0.5, 0.5, 0.6, 1
+        halign: 'left'
+        text_size: self.size

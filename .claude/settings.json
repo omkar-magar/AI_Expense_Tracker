@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(py -m unittest discover -s tests -v 2>&1)",
+      "PowerShell(.\\\\venv\\\\Scripts\\\\python.exe --version)",
+      "PowerShell(py -0p)",
+      "PowerShell(.\\\\venv\\\\Scripts\\\\python.exe -m pip install google-genai)",
+      "PowerShell(.\\\\venv\\\\Scripts\\\\python.exe -m unittest discover -s tests -v 2>&1)"
+    ]
+  }
+}

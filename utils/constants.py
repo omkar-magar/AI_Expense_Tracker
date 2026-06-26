@@ -1,0 +1,8 @@
+"""App-wide constants."""
+
+APP_NAME = "AI Expense Tracker"
+APP_VERSION = "0.1.0"
+
+DEFAULT_DAILY_LIMIT = 500.0
+BUZZER_DURATION_MS = 5000
+DUPLICATE_WINDOW_SECONDS = 60
