@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 60
 
     steps:
@@ -27,7 +27,9 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          sudo apt-get update
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo apt-get update -y
           sudo apt-get install -y \
             build-essential \
             git \
@@ -37,7 +39,9 @@ jobs:
             libtool \
             pkg-config \
             zlib1g-dev \
+            libncurses5-dev \
             libncursesw5-dev \
+            libtinfo5 \
             cmake \
             libffi-dev \
             libssl-dev \
