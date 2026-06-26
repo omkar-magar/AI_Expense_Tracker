@@ -55,20 +55,26 @@ jobs:
 
       - name: Build APK
         run: |
-          yes | buildozer android debug 2>&1 | tee build.log || true
-          echo "=== LAST 200 LINES ==="
-          tail -200 build.log
+          yes | buildozer android debug 2>&1 | tee build.log
+          echo "=== BUILD EXIT CODE: $? ==="
+          echo "=== Searching for APK ==="
+          find . -name "*.apk" -type f 2>/dev/null
+          echo "=== Last 100 lines of log ==="
+          tail -100 build.log
 
-      - name: Upload build log on failure
-        if: failure()
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: AI-Expense-Tracker-APK
+          path: |
+            bin/*.apk
+            .buildozer/android/platform/build-*/dists/*/build/outputs/apk/**/*.apk
+          if-no-files-found: warn
+
+      - name: Upload build log
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: build-log
           path: build.log
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: AI-Expense-Tracker-APK
-          path: bin/*.apk
-          retention-days: 30

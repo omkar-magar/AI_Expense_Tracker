@@ -4,21 +4,23 @@ package.name = expensetracker
 package.domain = com.expensetracker
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,wav,mp3,db
+source.exclude_dirs = tests,venv,.git,.github,.claude,__pycache__
 version = 0.1.0
-requirements = python3,kivy,pyjnius,android,sqlite3
+requirements = python3,kivy,pyjnius,android,sqlite3,openssl,requests,certifi,charset-normalizer,idna,urllib3,google-genai,httpx,httpcore,h11,anyio,sniffio,pydantic,pydantic-core,annotated-types,typing-extensions,tenacity,distro,websockets,google-auth,pyasn1,pyasn1-modules,cryptography,cffi,pycparser,typing-inspection
 orientation = portrait
 fullscreen = 0
+android.accept_sdk_license = True
 
 # Android permissions
-android.permissions = BIND_NOTIFICATION_LISTENER_SERVICE,VIBRATE,RECEIVE_BOOT_COMPLETED
+android.permissions = INTERNET,BIND_NOTIFICATION_LISTENER_SERVICE,VIBRATE,RECEIVE_BOOT_COMPLETED
 
 # Android API
 android.api = 33
 android.minapi = 21
 android.ndk = 25b
 
-# Include the Java notification listener service
-android.add_src = android/
+# Arch
+android.archs = arm64-v8a
 
 # Presplash and icon (replace with actual assets)
 # presplash.filename = assets/presplash.png
