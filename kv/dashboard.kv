@@ -144,6 +144,16 @@
                     height: self.minimum_height
                     spacing: dp(4)
 
+        # Simulate button (for desktop testing)
+        Button:
+            text: "+ Simulate Notification"
+            size_hint_y: None
+            height: dp(42)
+            font_size: sp(14)
+            background_color: 0.2, 0.5, 0.3, 1
+            color: 1, 1, 1, 1
+            on_release: root.open_simulate_popup()
+
         # Navigation bar
         BoxLayout:
             size_hint_y: None

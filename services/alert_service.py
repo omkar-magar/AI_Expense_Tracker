@@ -54,7 +54,7 @@ class AlertService:
         try:
             from kivy.core.audio import SoundLoader
 
-            sound = SoundLoader.load("assets/sounds/buzzer.wav")
+            sound = SoundLoader.load("assets/sounds/buzzer.mp3")
             if sound:
                 sound.play()
         except Exception:
