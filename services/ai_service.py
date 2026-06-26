@@ -8,7 +8,10 @@ Falls back to rule-based keyword matching when AI is off or API fails.
 import json
 from typing import Optional
 
-from google import genai
+try:
+    from google import genai
+except ImportError:
+    genai = None
 
 CATEGORIES = ["Food", "Travel", "Shopping", "Recharge", "Bills", "Entertainment", "Other"]
 
@@ -81,7 +84,7 @@ class AIService:
 
     @property
     def client(self):
-        if self._client is None and self.api_key:
+        if self._client is None and self.api_key and genai:
             self._client = genai.Client(api_key=self.api_key)
         return self._client
 
@@ -93,7 +96,7 @@ class AIService:
 
     @property
     def is_active(self) -> bool:
-        return self.use_llm and bool(self.api_key)
+        return self.use_llm and bool(self.api_key) and genai is not None
 
     def categorize(self, merchant: Optional[str], raw_text: str = "") -> str:
         if self.is_active:

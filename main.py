@@ -47,7 +47,7 @@ class ExpenseTrackerApp(App):
         return self.sm
 
     def _load_kv_files(self):
-        kv_dir = os.path.join(os.path.dirname(__file__), "kv")
+        kv_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "kv")
         for kv_file in sorted(glob.glob(os.path.join(kv_dir, "*.kv"))):
             Builder.load_file(kv_file)
 
