@@ -60,7 +60,7 @@ class AlertService:
         except Exception:
             pass
 
-        print(f"[ALERT] Daily spending limit exceeded!")
+        print("[ALERT] Daily spending limit exceeded!")
         self._buzzer_active = False
 
     def stop_buzzer(self):

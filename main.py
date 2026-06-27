@@ -5,12 +5,17 @@ Initializes the Kivy app, sets up the database, starts the notification
 listener bridge, and manages screen navigation.
 """
 
+import os
+# Use ANGLE backend (DirectX translation) instead of GLEW — avoids native
+# crash in SDL2 TextInput on older Intel GPU drivers.
+os.environ.setdefault("KIVY_GL_BACKEND", "angle_sdl2")
+os.environ.setdefault("SDL_IME_SHOW_UI", "0")
+
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, FadeTransition
 from kivy.lang import Builder
 from kivy.clock import Clock
 
-import os
 import glob
 
 from database.db_manager import DatabaseManager
