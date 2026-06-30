@@ -6,7 +6,7 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,wav,mp3,db
 source.exclude_dirs = tests,venv,.git,.github,.claude,__pycache__
 version = 0.1.0
-requirements = python3,kivy,pyjnius,android,sqlite3,openssl,requests,certifi,charset-normalizer,idna,urllib3
+requirements = python3,kivy==2.3.0,pyjnius,android,sqlite3,openssl,requests,certifi,charset-normalizer,idna,urllib3
 orientation = portrait
 fullscreen = 0
 android.accept_sdk_license = True
