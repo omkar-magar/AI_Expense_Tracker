@@ -10,6 +10,7 @@ import os
 # crash in SDL2 TextInput on older Intel GPU drivers.
 os.environ.setdefault("KIVY_GL_BACKEND", "angle_sdl2")
 os.environ.setdefault("SDL_IME_SHOW_UI", "0")
+os.environ.setdefault("SDL_AUDIODRIVER", "directsound")
 
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, FadeTransition

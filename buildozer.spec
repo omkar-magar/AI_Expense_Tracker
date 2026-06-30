@@ -15,7 +15,7 @@ android.accept_sdk_license = True
 android.permissions = INTERNET,BIND_NOTIFICATION_LISTENER_SERVICE,VIBRATE,RECEIVE_BOOT_COMPLETED
 
 # Android API
-android.api = 33
+android.api = 34
 android.minapi = 21
 android.ndk = 25b
 

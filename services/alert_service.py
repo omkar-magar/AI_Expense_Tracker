@@ -23,9 +23,23 @@ class AlertService:
 
     def __init__(self):
         self._buzzer_active = False
+        self._audio_available = None
+        self._sound = None
+
+    def _check_audio(self):
+        """Probe audio once; cache the result to avoid repeated native crashes."""
+        if self._audio_available is not None:
+            return self._audio_available
+        try:
+            from kivy.core.audio import SoundLoader
+            self._sound = SoundLoader.load("assets/sounds/buzzer.mp3")
+            self._audio_available = self._sound is not None
+        except Exception:
+            self._audio_available = False
+        return self._audio_available
 
     def trigger_buzzer(self):
-        """Play a 5-second buzzer alert."""
+        """Play a buzzer alert when limit is exceeded."""
         if self._buzzer_active:
             return
 
@@ -45,22 +59,17 @@ class AlertService:
             vibrator = activity.getSystemService(Context.VIBRATOR_SERVICE)
             vibrator.vibrate(BUZZER_DURATION_MS)
         except Exception:
-            self._fallback_buzzer()
+            pass
         finally:
             self._buzzer_active = False
 
     def _fallback_buzzer(self):
-        """Desktop fallback — try playing a sound file, else print warning."""
-        try:
-            from kivy.core.audio import SoundLoader
-
-            sound = SoundLoader.load("assets/sounds/buzzer.mp3")
-            if sound:
-                sound.play()
-        except Exception:
-            pass
-
-        print("[ALERT] Daily spending limit exceeded!")
+        """Desktop fallback — play sound if audio works, otherwise skip."""
+        if self._check_audio() and self._sound:
+            try:
+                self._sound.play()
+            except Exception:
+                self._audio_available = False
         self._buzzer_active = False
 
     def stop_buzzer(self):
