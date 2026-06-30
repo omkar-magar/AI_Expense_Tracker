@@ -9,12 +9,14 @@ import os
 import sys
 
 # Windows-only desktop fixes — ANGLE avoids a native SDL2/TextInput crash on
-# older Intel GPU drivers, directsound avoids a WASAPI audio crash. Neither
-# backend exists on Android, so they must not be set there.
+# older Intel GPU drivers, directsound avoids a WASAPI audio crash, and
+# disabling the SDL IME UI avoids a Windows text-entry quirk. None of these
+# apply on Android (no ANGLE backend, no DirectSound, and the Android soft
+# keyboard relies on the IME) — setting them there crashes the app.
 if sys.platform == "win32":
     os.environ.setdefault("KIVY_GL_BACKEND", "angle_sdl2")
     os.environ.setdefault("SDL_AUDIODRIVER", "directsound")
-os.environ.setdefault("SDL_IME_SHOW_UI", "0")
+    os.environ.setdefault("SDL_IME_SHOW_UI", "0")
 
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, FadeTransition
@@ -43,6 +45,7 @@ class ExpenseTrackerApp(App):
     title = "AI Expense Tracker"
 
     def build(self):
+        self._configure_keyboard()
         self._load_kv_files()
         self._init_services()
 
@@ -55,6 +58,15 @@ class ExpenseTrackerApp(App):
 
         Clock.schedule_once(self._after_init, 2)
         return self.sm
+
+    def _configure_keyboard(self):
+        """Make the on-screen keyboard pan the layout instead of resizing the
+        GL surface — surface resize on keyboard show is a common cause of
+        TextInput crashes on Android."""
+        from kivy.core.window import Window
+        from kivy.utils import platform
+        if platform == "android":
+            Window.softinput_mode = "pan"
 
     def _load_kv_files(self):
         kv_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "kv")
