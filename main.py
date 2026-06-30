@@ -8,15 +8,36 @@ listener bridge, and manages screen navigation.
 import os
 import sys
 
-# Windows-only desktop fixes — ANGLE avoids a native SDL2/TextInput crash on
-# older Intel GPU drivers, directsound avoids a WASAPI audio crash, and
-# disabling the SDL IME UI avoids a Windows text-entry quirk. None of these
-# apply on Android (no ANGLE backend, no DirectSound, and the Android soft
-# keyboard relies on the IME) — setting them there crashes the app.
-if sys.platform == "win32":
+# python-for-android sets ANDROID_ARGUMENT; use it to detect Android without
+# importing kivy yet (env vars below must be set before kivy initializes).
+ON_ANDROID = "ANDROID_ARGUMENT" in os.environ
+
+if ON_ANDROID:
+    # Route Kivy's logs (which capture the last events before a crash) to the
+    # app's external files dir. This is readable with any file manager at
+    # Android/data/<package>/files/.kivy/logs — no USB/adb or permission needed.
+    try:
+        from jnius import autoclass
+        _activity = autoclass("org.kivy.android.PythonActivity").mActivity
+        _ext = _activity.getExternalFilesDir(None)
+        if _ext is not None:
+            os.environ.setdefault("KIVY_HOME", os.path.join(_ext.getAbsolutePath(), ".kivy"))
+    except Exception:
+        pass
+elif sys.platform == "win32":
+    # Windows-only desktop fixes — ANGLE avoids a native SDL2/TextInput crash on
+    # older Intel GPU drivers, directsound avoids a WASAPI audio crash, and
+    # disabling the SDL IME UI avoids a Windows text-entry quirk. None apply on
+    # Android, where setting them crashes the app.
     os.environ.setdefault("KIVY_GL_BACKEND", "angle_sdl2")
     os.environ.setdefault("SDL_AUDIODRIVER", "directsound")
     os.environ.setdefault("SDL_IME_SHOW_UI", "0")
+
+# Force the system (native) soft keyboard on Android instead of Kivy's managed
+# virtual keyboard — must be set via Config before the Window is created.
+from kivy.config import Config
+if ON_ANDROID:
+    Config.set("kivy", "keyboard_mode", "system")
 
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, FadeTransition
@@ -99,4 +120,11 @@ class ExpenseTrackerApp(App):
 
 
 if __name__ == "__main__":
-    ExpenseTrackerApp().run()
+    try:
+        ExpenseTrackerApp().run()
+    except Exception:
+        # Make sure any fatal Python error lands in the (now accessible) Kivy
+        # log instead of vanishing silently on the device.
+        from kivy.logger import Logger
+        Logger.exception("FATAL: uncaught exception in app")
+        raise
