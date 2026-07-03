@@ -29,7 +29,8 @@ side. All parsing/categorizing/storage stays in Python.
    </service>
    ```
 
-   We inject this via `android.extra_manifest_xml` in `buildozer.spec`. **If your
+   We inject this via `android.extra_manifest_xml = ./java/extra_manifest.xml`
+   in `buildozer.spec` (that key takes a file path, not inline XML). **If your
    buildozer version ignores that key**, the service won't be registered and
    notifications won't be captured (SMS still works). To verify after a build,
    check the generated

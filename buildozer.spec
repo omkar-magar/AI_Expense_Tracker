@@ -18,9 +18,9 @@ android.permissions = INTERNET,BIND_NOTIFICATION_LISTENER_SERVICE,VIBRATE,RECEIV
 android.add_src = java
 
 # Register the NotificationListenerService in the manifest so Android can bind
-# it. Injected inside <application>. If this key is not honoured by the
-# buildozer version, see java/README_notifications.md for the manual step.
-android.extra_manifest_xml = <service android:name="com.expensetracker.NotificationListener" android:label="Expense Tracker Notifications" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="true"><intent-filter><action android:name="android.service.notification.NotificationListenerService" /></intent-filter></service>
+# it. This key takes a PATH to a file whose XML is injected into the manifest.
+# See java/README_notifications.md to verify it lands inside <application>.
+android.extra_manifest_xml = ./java/extra_manifest.xml
 
 # Android API
 android.api = 34
