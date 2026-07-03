@@ -95,13 +95,13 @@ class ExpenseTrackerApp(App):
         return self.sm
 
     def _configure_keyboard(self):
-        """Make the on-screen keyboard pan the layout instead of resizing the
-        GL surface — surface resize on keyboard show is a common cause of
-        TextInput crashes on Android."""
+        """Pan the layout so the focused field sits just above the soft keyboard
+        ('below_target'), instead of resizing the GL surface (a TextInput crash
+        trigger on Android) or over-panning it off the top of the screen."""
         from kivy.core.window import Window
         from kivy.utils import platform
         if platform == "android":
-            Window.softinput_mode = "pan"
+            Window.softinput_mode = "below_target"
 
     def _load_kv_files(self):
         kv_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "kv")
