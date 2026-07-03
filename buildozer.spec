@@ -4,7 +4,7 @@ package.name = expensetracker
 package.domain = com.expensetracker
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,wav,mp3,db
-source.exclude_dirs = tests,venv,.git,.github,.claude,__pycache__
+source.exclude_dirs = tests,venv,.git,.github,.claude,__pycache__,p4a-patched,tools
 version = 0.1.0
 requirements = python3,kivy,pyjnius,android,sqlite3,openssl,requests,certifi,charset-normalizer,idna,urllib3
 orientation = portrait
@@ -15,11 +15,9 @@ android.accept_sdk_license = True
 android.permissions = INTERNET,BIND_NOTIFICATION_LISTENER_SERVICE,VIBRATE,RECEIVE_BOOT_COMPLETED,READ_SMS,RECEIVE_SMS
 
 # Compile the NotificationListenerService glue (java/com/expensetracker/*.java).
-# NOTE: the <service> still needs to be registered in the manifest's
-# <application> element to be usable. android.extra_manifest_xml only injects
-# at the top-level <manifest> (aapt rejects a <service> there), so that is a
-# follow-up via the p4a manifest template — see java/README_notifications.md.
-# SMS capture works without any of this.
+# It is registered in the manifest's <application> by patching the p4a manifest
+# template at build time (CI clones p4a, runs tools/patch_p4a_manifest.py, and
+# points p4a.source_dir at the patched copy). See java/README_notifications.md.
 android.add_src = java
 
 # Android API

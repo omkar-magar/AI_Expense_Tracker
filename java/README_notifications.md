@@ -29,21 +29,19 @@ side. All parsing/categorizing/storage stays in Python.
    </service>
    ```
 
-   **STATUS: not yet wired.** `android.extra_manifest_xml` only injects into the
-   top-level `<manifest>` element, and aapt rejects a `<service>` there
-   (`error: unexpected element <service> found in <manifest>`). There is no
-   buildozer key that injects a child element into `<application>`.
+   **STATUS: wired via a CI patch.** `android.extra_manifest_xml` only injects
+   into the top-level `<manifest>`, and aapt rejects a `<service>` there
+   (`error: unexpected element <service> found in <manifest>`); no buildozer key
+   injects a child element into `<application>`. So instead the CI workflow:
+     1. clones python-for-android at `v2024.01.21` into `p4a-patched/`,
+     2. runs `tools/patch_p4a_manifest.py`, which inserts the `<service>` above
+        into the SDL2 `AndroidManifest.tmpl.xml` (inside `<application>`), and
+     3. rewrites `p4a.branch` to `p4a.source_dir = .../p4a-patched` so buildozer
+        builds from the patched copy.
 
-   To finish this, modify the python-for-android SDL2 manifest template so the
-   `<service>` (see `java/extra_manifest.xml`) is emitted inside `<application>`.
-   The template lives at
-   `pythonforandroid/bootstraps/sdl2/build/templates/AndroidManifest.tmpl.xml`;
-   with `p4a.branch = v2024.01.21` it is cloned into
-   `.buildozer/android/platform/python-for-android/`. This can be done with a
-   small patch step in the CI workflow before `buildozer android debug`.
-
-   Until then the Java class is compiled into the APK but never bound by the OS,
-   so **notification capture is inactive**. SMS capture is unaffected and works.
+   To verify after a build, check the generated
+   `.buildozer/android/platform/build-*/dists/*/src/main/AndroidManifest.xml`
+   contains the `<service>` inside `<application>`.
 
 ## Granting access on the phone
 Notification access is not a runtime permission. The user must enable it once:

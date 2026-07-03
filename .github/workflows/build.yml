@@ -58,6 +58,17 @@ jobs:
           # Cython must stay on 0.29.x; Cython 3.x breaks p4a recipes.
           pip install buildozer==1.5.0 python-for-android==2024.1.21 "cython==0.29.36"
 
+      - name: Clone and patch python-for-android (register notification service)
+        run: |
+          set -e
+          git clone --depth 1 --branch v2024.01.21 \
+            https://github.com/kivy/python-for-android.git "$GITHUB_WORKSPACE/p4a-patched"
+          python tools/patch_p4a_manifest.py "$GITHUB_WORKSPACE/p4a-patched"
+          # Use the patched local p4a instead of cloning the pristine tag.
+          sed -i "s|^p4a.branch = .*|p4a.source_dir = $GITHUB_WORKSPACE/p4a-patched|" buildozer.spec
+          echo "--- p4a config now in buildozer.spec ---"
+          grep -n "p4a\." buildozer.spec
+
       - name: Build APK
         run: |
           # Capture buildozer's real exit code via PIPESTATUS[0]; piping into
