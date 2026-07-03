@@ -32,7 +32,7 @@
         # Transaction list
         ScrollView:
             RecycleView:
-                data: [{'txn_text': "Rs.{:.0f} - {}".format(t.get('amount',0), t.get('merchant','Unknown')), 'txn_detail': "{} | {} | {}".format(t.get('txn_time',''), t.get('category','Other'), t.get('source_app',''))} for t in root.transactions]
+                data: [{'txn_id': t.get('id', 0), 'txn_text': "Rs.{:.0f} - {}".format(t.get('amount',0), t.get('merchant','Unknown')), 'txn_detail': "{} | {} | {}".format(t.get('txn_time',''), t.get('category','Other'), t.get('source_app',''))} for t in root.transactions]
                 viewclass: 'TxnDetailItem'
                 RecycleBoxLayout:
                     orientation: 'vertical'
@@ -51,12 +51,14 @@
 
 
 <TxnDetailItem@BoxLayout>:
-    orientation: 'vertical'
+    orientation: 'horizontal'
     txn_text: ''
     txn_detail: ''
+    txn_id: 0
     size_hint_y: None
     height: dp(64)
     padding: dp(10)
+    spacing: dp(8)
     canvas.before:
         Color:
             rgba: 0.2, 0.2, 0.28, 1
@@ -64,15 +66,30 @@
             pos: self.pos
             size: self.size
             radius: [dp(8)]
-    Label:
-        text: root.txn_text
-        font_size: sp(15)
+
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: root.txn_text
+            font_size: sp(15)
+            color: 1, 1, 1, 1
+            halign: 'left'
+            valign: 'middle'
+            text_size: self.size
+        Label:
+            text: root.txn_detail
+            font_size: sp(12)
+            color: 0.5, 0.5, 0.6, 1
+            halign: 'left'
+            valign: 'middle'
+            text_size: self.size
+
+    Button:
+        text: "Delete"
+        size_hint_x: None
+        width: dp(72)
+        font_size: sp(13)
+        background_normal: ''
+        background_color: 0.7, 0.2, 0.2, 1
         color: 1, 1, 1, 1
-        halign: 'left'
-        text_size: self.size
-    Label:
-        text: root.txn_detail
-        font_size: sp(12)
-        color: 0.5, 0.5, 0.6, 1
-        halign: 'left'
-        text_size: self.size
+        on_release: app.root.get_screen('transactions').delete_transaction(root.txn_id)

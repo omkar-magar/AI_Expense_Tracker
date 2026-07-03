@@ -49,6 +49,14 @@ def get_today_transactions(db):
     return [dict(row) for row in rows]
 
 
+def delete_transaction(db, txn_id):
+    # notification_logs.txn_id has a FK to transactions(id) and foreign_keys
+    # is ON, so clear the reference before deleting or the DELETE fails with
+    # "FOREIGN KEY constraint failed". Keep the log row (audit) but null the ref.
+    db.execute("UPDATE notification_logs SET txn_id = NULL WHERE txn_id = ?", (txn_id,))
+    db.execute("DELETE FROM transactions WHERE id = ?", (txn_id,))
+
+
 def get_today_total(db) -> float:
     today = date.today().isoformat()
     row = db.fetch_one(
