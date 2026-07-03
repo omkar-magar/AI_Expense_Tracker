@@ -13,12 +13,23 @@ import sys
 ON_ANDROID = "ANDROID_ARGUMENT" in os.environ
 
 if ON_ANDROID:
-    # Route Kivy's logs (which capture the last events before a crash) to the
-    # app's external files dir. This is readable with any file manager at
-    # Android/data/<package>/files/.kivy/logs — no USB/adb or permission needed.
     try:
         from jnius import autoclass
         _activity = autoclass("org.kivy.android.PythonActivity").mActivity
+
+        # Kivy's SDL2 backend opens the soft keyboard via `from android import
+        # mActivity`, but this python-for-android's `android` module no longer
+        # exposes that name — so focusing any TextInput raises
+        # `ImportError: cannot import name mActivity` and crashes the app.
+        # Inject the activity (which we already have via jnius) so Kivy's
+        # import succeeds and the keyboard can open.
+        import android
+        if not hasattr(android, "mActivity"):
+            android.mActivity = _activity
+
+        # Route Kivy's logs (which capture the last events before a crash) to
+        # the app's external files dir — readable with any file manager at
+        # Android/data/<package>/files/.kivy/logs, no USB/adb or permission.
         _ext = _activity.getExternalFilesDir(None)
         if _ext is not None:
             os.environ.setdefault("KIVY_HOME", os.path.join(_ext.getAbsolutePath(), ".kivy"))
