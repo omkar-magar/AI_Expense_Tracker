@@ -14,13 +14,13 @@ android.accept_sdk_license = True
 # Android permissions
 android.permissions = INTERNET,BIND_NOTIFICATION_LISTENER_SERVICE,VIBRATE,RECEIVE_BOOT_COMPLETED,READ_SMS,RECEIVE_SMS
 
-# Compile the NotificationListenerService glue (java/com/expensetracker/*.java)
+# Compile the NotificationListenerService glue (java/com/expensetracker/*.java).
+# NOTE: the <service> still needs to be registered in the manifest's
+# <application> element to be usable. android.extra_manifest_xml only injects
+# at the top-level <manifest> (aapt rejects a <service> there), so that is a
+# follow-up via the p4a manifest template — see java/README_notifications.md.
+# SMS capture works without any of this.
 android.add_src = java
-
-# Register the NotificationListenerService in the manifest so Android can bind
-# it. This key takes a PATH to a file whose XML is injected into the manifest.
-# See java/README_notifications.md to verify it lands inside <application>.
-android.extra_manifest_xml = ./java/extra_manifest.xml
 
 # Android API
 android.api = 34
