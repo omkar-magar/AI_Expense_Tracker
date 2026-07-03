@@ -12,7 +12,15 @@ fullscreen = 0
 android.accept_sdk_license = True
 
 # Android permissions
-android.permissions = INTERNET,BIND_NOTIFICATION_LISTENER_SERVICE,VIBRATE,RECEIVE_BOOT_COMPLETED
+android.permissions = INTERNET,BIND_NOTIFICATION_LISTENER_SERVICE,VIBRATE,RECEIVE_BOOT_COMPLETED,READ_SMS,RECEIVE_SMS
+
+# Compile the NotificationListenerService glue (java/com/expensetracker/*.java)
+android.add_src = java
+
+# Register the NotificationListenerService in the manifest so Android can bind
+# it. Injected inside <application>. If this key is not honoured by the
+# buildozer version, see java/README_notifications.md for the manual step.
+android.extra_manifest_xml = <service android:name="com.expensetracker.NotificationListener" android:label="Expense Tracker Notifications" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="true"><intent-filter><action android:name="android.service.notification.NotificationListenerService" /></intent-filter></service>
 
 # Android API
 android.api = 34

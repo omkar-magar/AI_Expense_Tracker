@@ -46,6 +46,19 @@ class SettingsScreen(Screen):
         else:
             self.status_text = "AI disabled (using rule-based mode)"
 
+    def open_notification_access(self):
+        """Open Android's Notification Access settings so the user can enable
+        the listener (this cannot be granted via a runtime permission prompt)."""
+        try:
+            from jnius import autoclass
+            Intent = autoclass("android.content.Intent")
+            Settings = autoclass("android.provider.Settings")
+            activity = autoclass("org.kivy.android.PythonActivity").mActivity
+            intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+            activity.startActivity(intent)
+        except Exception as e:
+            print("[Settings] Could not open notification access settings: %s" % e)
+
     def _mask_key(self, key: str) -> str:
         if not key:
             return "Not set"

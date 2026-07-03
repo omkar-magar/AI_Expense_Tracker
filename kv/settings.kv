@@ -109,6 +109,25 @@
                 color: 1, 1, 1, 1
                 on_release: root.save_api_key(api_key_input.text)
 
+        # Automatic capture
+        Button:
+            text: "Grant Notification Access"
+            font_size: sp(14)
+            size_hint_y: None
+            height: dp(44)
+            background_normal: ''
+            background_color: 0.25, 0.35, 0.5, 1
+            color: 1, 1, 1, 1
+            on_release: root.open_notification_access()
+
+        Label:
+            text: "Needed to auto-read UPI app notifications.\nSMS alerts are read automatically once allowed."
+            font_size: sp(12)
+            color: 0.4, 0.4, 0.5, 1
+            halign: 'center'
+            size_hint_y: None
+            height: dp(36)
+
         # Info
         Label:
             text: "AI powers: smart categorization,\ndaily spending summary, spending insights."

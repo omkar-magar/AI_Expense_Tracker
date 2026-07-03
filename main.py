@@ -64,6 +64,9 @@ from services.alert_service import AlertService
 from services.ai_service import AIService
 from services.transaction_service import TransactionService
 
+from capture.notification_bridge import NotificationBridge
+from capture.sms_reader import SmsReader
+
 from screens.splash import SplashScreen
 from screens.dashboard import DashboardScreen
 from screens.limit import LimitScreen
@@ -123,7 +126,27 @@ class ExpenseTrackerApp(App):
             alert_service=self.alert_service,
         )
 
+        # Automatic transaction capture (Android only; inert on desktop).
+        self.notification_bridge = NotificationBridge(self.notification_service)
+        self.sms_reader = SmsReader(self.notification_service)
+
+    def _request_android_permissions(self):
+        """Request runtime permissions needed for automatic capture."""
+        try:
+            from android.permissions import request_permissions, Permission
+            request_permissions([Permission.READ_SMS, Permission.RECEIVE_SMS])
+        except Exception:
+            pass
+
+    def _start_capture(self):
+        self.notification_bridge.start()
+        self.sms_reader.start()
+
     def _after_init(self, dt):
+        from kivy.utils import platform
+        if platform == "android":
+            self._request_android_permissions()
+            self._start_capture()
         self.sm.current = "dashboard"
 
     def get_app(self):

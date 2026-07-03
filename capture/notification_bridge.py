@@ -1,70 +1,85 @@
 """
-Android notification bridge — connects Android's NotificationListenerService
-to the Python notification_service.
+Notification bridge — receives UPI app notifications captured by the Java
+NotificationListenerService and feeds them into the transaction pipeline.
 
-On Android:
-  A Java/Kotlin NotificationListenerService captures notifications and sends
-  them to this bridge via pyjnius / android.broadcast. This module registers
-  a BroadcastReceiver to receive that data.
+How it works:
+  Android only lets the OS instantiate a NotificationListenerService, so a
+  tiny Java class (java/com/expensetracker/NotificationListener.java)
+  is required. That class does nothing but append each relevant notification
+  to a queue file in the app's private files dir. This Python bridge polls
+  that file on a timer and processes new lines — this avoids Android 13+
+  runtime-broadcast-receiver restrictions entirely.
 
-On desktop (dev mode):
-  Provides a simulate_notification() function for manual testing.
+  Queue line format (one per notification):  <package>\t<body>
 
-Integration point:
-  The Java service (to be placed in the buildozer android project) should
-  broadcast an intent with extras:
-    - "package_name": str (e.g. "com.phonepe.app")
-    - "title": str
-    - "body": str (the notification text)
+On desktop this is inert; use the dashboard "Simulate" button instead.
 """
 
+import os
+
 from kivy.utils import platform
+from kivy.clock import Clock
+
+
+QUEUE_FILENAME = "notif_queue.txt"
+POLL_INTERVAL_SECONDS = 2
 
 
 class NotificationBridge:
 
     def __init__(self, notification_service):
         self.notification_service = notification_service
-        self._receiver = None
+        self._event = None
+        self._queue_path = None
 
     def start(self):
-        if platform == "android":
-            self._start_android_listener()
-        else:
-            print("[NotificationBridge] Running on desktop — use simulate_notification() for testing")
-
-    def _start_android_listener(self):
-        """Register a BroadcastReceiver for notification intents from Java service."""
+        if platform != "android":
+            print("[NotificationBridge] Not on Android — use Simulate for testing")
+            return
         try:
             from jnius import autoclass
-            from android import activity
-
-            PythonActivity = autoclass("org.kivy.android.PythonActivity")
-            Intent = autoclass("android.content.Intent")
-            IntentFilter = autoclass("android.content.IntentFilter")
-            BroadcastReceiver = autoclass("android.content.BroadcastReceiver")
-
-            # The Java NotificationListenerService should broadcast
-            # "com.expensetracker.NOTIFICATION" with extras
-            intent_filter = IntentFilter()
-            intent_filter.addAction("com.expensetracker.NOTIFICATION")
-
-            def on_broadcast(context, intent):
-                package_name = intent.getStringExtra("package_name")
-                body = intent.getStringExtra("body")
-                if body:
-                    self.notification_service.on_notification_received(body, package_name)
-
-            activity.bind(on_new_intent=on_broadcast)
-            print("[NotificationBridge] Android listener started")
-
-        except ImportError:
-            print("[NotificationBridge] pyjnius not available — Android listener not started")
-
-    def simulate_notification(self, text: str, package_name: str = "com.phonepe.app"):
-        """For desktop testing — simulate a notification arriving."""
-        print(f"[SIMULATE] Notification: {text}")
-        self.notification_service.on_notification_received(text, package_name)
+            activity = autoclass("org.kivy.android.PythonActivity").mActivity
+            files_dir = activity.getFilesDir().getAbsolutePath()
+            self._queue_path = os.path.join(files_dir, QUEUE_FILENAME)
+            self._event = Clock.schedule_interval(self._drain_queue, POLL_INTERVAL_SECONDS)
+            print("[NotificationBridge] Started, watching %s" % self._queue_path)
+        except Exception as e:
+            print("[NotificationBridge] Failed to start: %s" % e)
 
     def stop(self):
-        self._receiver = None
+        if self._event is not None:
+            self._event.cancel()
+            self._event = None
+
+    def _drain_queue(self, dt):
+        if not self._queue_path or not os.path.exists(self._queue_path):
+            return
+        # Atomically claim the queue: rename it aside so the Java service keeps
+        # appending to a fresh file while we process this batch (no lost lines).
+        claim = self._queue_path + ".processing"
+        try:
+            os.rename(self._queue_path, claim)
+        except OSError:
+            return
+        try:
+            with open(claim, "r", encoding="utf-8", errors="replace") as f:
+                lines = f.readlines()
+        except OSError:
+            lines = []
+        finally:
+            try:
+                os.remove(claim)
+            except OSError:
+                pass
+
+        for line in lines:
+            line = line.rstrip("\n").rstrip("\r")
+            if not line:
+                continue
+            package_name, _, body = line.partition("\t")
+            if body:
+                self.notification_service.on_notification_received(body, package_name)
+
+    def simulate_notification(self, text, package_name="com.phonepe.app"):
+        """Desktop/testing helper — inject a notification directly."""
+        self.notification_service.on_notification_received(text, package_name)
