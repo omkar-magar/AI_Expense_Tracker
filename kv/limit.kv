@@ -1,77 +1,71 @@
 <LimitScreen>:
     BoxLayout:
         orientation: 'vertical'
-        padding: dp(24)
-        spacing: dp(20)
+        padding: dp(20)
+        spacing: dp(16)
         canvas.before:
             Color:
-                rgba: 0.12, 0.12, 0.18, 1
+                rgba: app.color_bg
             Rectangle:
                 pos: self.pos
                 size: self.size
 
+        ScreenHeader:
+            title: "Daily Limit"
+
         Widget:
-            size_hint_y: 0.15
-
-        Label:
-            text: "Set Daily Spending Limit"
-            font_size: sp(22)
-            bold: True
-            color: 1, 1, 1, 1
             size_hint_y: None
-            height: dp(40)
+            height: dp(8)
 
-        BoxLayout:
+        # Limit card
+        Card:
             size_hint_y: None
-            height: dp(36)
-            spacing: dp(8)
+            height: dp(210)
+            padding: dp(20)
+            spacing: dp(14)
 
             Label:
-                text: "Current Limit: Rs." + root.current_limit
-                font_size: sp(16)
-                color: 0.6, 0.6, 0.7, 1
+                text: "Set your daily spending limit"
+                font_size: sp(17)
+                bold: True
+                color: app.color_text
                 halign: 'left'
                 valign: 'middle'
-                text_size: self.size
+                text_size: self.width, None
+                size_hint_y: None
+                height: dp(28)
 
-            ResetButton:
-                size_hint_x: None
-                width: dp(36)
-                icon_color: 0.8, 0.6, 0.3, 1
-                on_release:
-                    root.reset_limit()
-                    limit_input.text = ''
+            BoxLayout:
+                size_hint_y: None
+                height: dp(30)
+                spacing: dp(8)
+                Label:
+                    text: "Current: ₹" + root.current_limit
+                    font_size: sp(14)
+                    color: app.color_text_muted
+                    halign: 'left'
+                    valign: 'middle'
+                    text_size: self.size
+                ResetButton:
+                    size_hint_x: None
+                    width: dp(34)
+                    icon_color: app.color_text_muted
+                    on_release:
+                        root.reset_limit()
+                        limit_input.text = ''
 
-        TextInput:
-            id: limit_input
-            hint_text: "Enter amount (e.g. 500)"
-            input_filter: 'float'
-            font_size: sp(20)
-            multiline: False
-            size_hint_y: None
-            height: dp(50)
-            padding: dp(12)
-            background_color: 0.2, 0.2, 0.28, 1
-            foreground_color: 1, 1, 1, 1
-            hint_text_color: 0.4, 0.4, 0.5, 1
+            ThemeInput:
+                id: limit_input
+                hint_text: "Enter amount (e.g. 500)"
+                input_filter: 'float'
+                font_size: sp(20)
 
-        Button:
-            text: "Save Limit"
-            font_size: sp(18)
-            size_hint_y: None
-            height: dp(50)
-            background_color: 0.2, 0.6, 0.4, 1
-            color: 1, 1, 1, 1
-            on_release: root.save_limit(limit_input.text)
+            FlatButton:
+                text: "Save Limit"
+                bg: app.color_accent
+                size_hint_y: None
+                height: dp(50)
+                font_size: sp(16)
+                on_release: root.save_limit(limit_input.text)
 
         Widget:
-            size_hint_y: 0.2
-
-        Button:
-            text: "Back to Dashboard"
-            font_size: sp(15)
-            size_hint_y: None
-            height: dp(44)
-            background_color: 0.3, 0.3, 0.4, 1
-            color: 0.8, 0.8, 0.9, 1
-            on_release: root.manager.current = 'dashboard'

@@ -70,6 +70,52 @@ class TestTransactionParser(unittest.TestCase):
         self.assertEqual(result["source_app"], "com.unknown.app")
 
 
+class TestParserCorrectness(unittest.TestCase):
+    """Regression tests for false-positive filtering, merchant cleanup, and
+    balance-aware amount selection (suggestion #1)."""
+
+    def test_future_autopay_reminder_rejected(self):
+        self.assertIsNone(parse_notification("₹499 will be debited on 5th for Netflix"))
+
+    def test_failed_txn_rejected(self):
+        self.assertIsNone(parse_notification("Payment of ₹500 to Swiggy failed"))
+
+    def test_declined_txn_rejected(self):
+        self.assertIsNone(parse_notification("Your payment of ₹1200 was declined"))
+
+    def test_collect_request_rejected(self):
+        self.assertIsNone(parse_notification("Rahul has requested ₹200 from you"))
+
+    def test_promo_cashback_offer_rejected(self):
+        self.assertIsNone(parse_notification("Get ₹100 cashback on your next order!"))
+
+    def test_bill_due_reminder_rejected(self):
+        self.assertIsNone(parse_notification("Your electricity bill of ₹1500 is due"))
+
+    def test_merchant_trailing_via_stripped(self):
+        result = parse_notification("Paid ₹230 to Swiggy via UPI")
+        self.assertIsNotNone(result)
+        self.assertEqual(result["merchant"], "Swiggy")
+
+    def test_merchant_trailing_ref_stripped(self):
+        result = parse_notification("Sent ₹500 to Rahul ref 998877")
+        self.assertEqual(result["merchant"], "Rahul")
+
+    def test_balance_amount_not_picked(self):
+        result = parse_notification("Debited ₹230 to Amazon. Avl bal ₹9,500")
+        self.assertIsNotNone(result)
+        self.assertEqual(result["amount"], 230.0)
+
+    def test_limit_amount_not_picked(self):
+        result = parse_notification("Spent ₹230 at Cafe. Card limit ₹50,000")
+        self.assertEqual(result["amount"], 230.0)
+
+    def test_real_cashback_credit_still_parses(self):
+        result = parse_notification("₹50 cashback credited to your account")
+        self.assertIsNotNone(result)
+        self.assertEqual(result["txn_type"], "credit")
+
+
 class TestAIService(unittest.TestCase):
 
     def test_food_category(self):

@@ -52,3 +52,28 @@ screen directly.
 ## SMS (no Java needed)
 `capture/sms_reader.py` reads bank/UPI SMS by polling the SMS content provider
 via pyjnius. It only needs the `READ_SMS` permission (requested at startup).
+The last-seen message id is persisted (`sms_last_id` in settings), so messages
+that arrive while the app is closed are picked up on the next poll instead of
+being skipped.
+
+## Background service (capture while the app is closed)
+`service/capture.py` is a python-for-android **foreground service** that runs
+the same capture pipeline in a separate process, so SMS / UPI notifications are
+captured even when the UI is backgrounded or closed.
+
+- Wired in `buildozer.spec`: `services = capture:service/capture.py:foreground`
+  plus the `FOREGROUND_SERVICE` and `WAKE_LOCK` permissions.
+- Started from the app in `main.py::_start_background_service()` via the p4a
+  generated class `com.expensetracker.expensetracker.ServiceCapture`.
+- It reuses `SmsReader`/`NotificationBridge` through their `setup()` +
+  `poll_once()`/`drain_once()` methods (no duplicated logic). Running it
+  alongside the in-app pollers is safe: SMS progress is the shared persisted
+  `sms_last_id`, and the notification queue file is claimed atomically.
+
+**Needs on-device verification** (cannot be tested off-device):
+  1. Install, grant Notification Access + SMS permission, then close the app.
+  2. Make a UPI payment; confirm a persistent "capture service" notification is
+     present and the payment appears in the Review inbox on reopening.
+  3. If the service class isn't found, check the generated service name in
+     `.buildozer/.../dists/*/src/main/java/.../ServiceCapture.java` and update
+     the class name in `_start_background_service()` to match.

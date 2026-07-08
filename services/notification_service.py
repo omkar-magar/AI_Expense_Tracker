@@ -30,9 +30,10 @@ class NotificationService:
         if txn is None:
             return
 
+        # The txn is captured as 'pending' (not yet counted), so warn using a
+        # projected total: today's confirmed spend + this new debit.
         if txn["txn_type"] == "debit":
-            is_over = self.budget_service.is_limit_exceeded()
-            if is_over:
+            if self.budget_service.would_exceed(txn.get("amount", 0)):
                 self.alert_service.trigger_buzzer()
 
         if self._dashboard_callback:

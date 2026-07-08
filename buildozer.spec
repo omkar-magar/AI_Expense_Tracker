@@ -12,7 +12,12 @@ fullscreen = 0
 android.accept_sdk_license = True
 
 # Android permissions
-android.permissions = INTERNET,BIND_NOTIFICATION_LISTENER_SERVICE,VIBRATE,RECEIVE_BOOT_COMPLETED,READ_SMS,RECEIVE_SMS
+android.permissions = INTERNET,BIND_NOTIFICATION_LISTENER_SERVICE,VIBRATE,RECEIVE_BOOT_COMPLETED,READ_SMS,RECEIVE_SMS,FOREGROUND_SERVICE,WAKE_LOCK
+
+# Background capture service — keeps SMS/notification capture running while the
+# app is closed/backgrounded. Entry point: service/capture.py (foreground type
+# so Android does not kill it). Reuses the same pipeline as the app.
+services = capture:service/capture.py:foreground
 
 # Compile the NotificationListenerService glue (java/com/expensetracker/*.java).
 # It is registered in the manifest's <application> by patching the p4a manifest

@@ -1,148 +1,106 @@
 <SettingsScreen>:
     BoxLayout:
         orientation: 'vertical'
-        padding: dp(24)
-        spacing: dp(16)
+        padding: dp(20)
+        spacing: dp(14)
         canvas.before:
             Color:
-                rgba: 0.12, 0.12, 0.18, 1
+                rgba: app.color_bg
             Rectangle:
                 pos: self.pos
                 size: self.size
 
-        # Header
-        BoxLayout:
-            size_hint_y: None
-            height: dp(44)
-            Button:
-                text: "< Back"
-                size_hint_x: 0.3
-                background_color: 0, 0, 0, 0
-                color: 0.4, 0.6, 1, 1
-                font_size: sp(15)
-                on_release: root.manager.current = 'dashboard'
-            Label:
-                text: "Settings"
-                font_size: sp(20)
-                bold: True
-                color: 1, 1, 1, 1
-            Widget:
-                size_hint_x: 0.3
+        ScreenHeader:
+            title: "Settings"
 
-        # AI Status
+        # AI status pill
         Label:
             text: root.status_text
-            font_size: sp(14)
+            font_size: sp(13)
             bold: True
-            color: (0.2, 0.8, 0.4, 1) if 'ACTIVE' in root.status_text else (0.8, 0.6, 0.2, 1)
+            color: app.color_good if 'ACTIVE' in root.status_text else (0.95, 0.68, 0.28, 1)
             size_hint_y: None
-            height: dp(30)
+            height: dp(26)
 
-        # Gemini section card
-        BoxLayout:
-            orientation: 'vertical'
+        # Gemini AI card
+        Card:
             size_hint_y: None
-            height: dp(220)
-            padding: dp(16)
+            height: dp(250)
             spacing: dp(12)
-            canvas.before:
-                Color:
-                    rgba: 0.18, 0.18, 0.25, 1
-                RoundedRectangle:
-                    pos: self.pos
-                    size: self.size
-                    radius: [dp(12)]
 
             Label:
-                text: "Gemini Flash Pro"
-                font_size: sp(16)
+                text: "Gemini AI"
+                font_size: sp(17)
                 bold: True
-                color: 0.9, 0.9, 1, 1
+                color: app.color_text
+                halign: 'left'
+                valign: 'middle'
+                text_size: self.width, None
                 size_hint_y: None
                 height: dp(28)
 
-            # AI toggle
             BoxLayout:
                 size_hint_y: None
-                height: dp(40)
+                height: dp(44)
                 Label:
-                    text: "Enable AI Features"
+                    text: "Enable AI features"
                     font_size: sp(14)
-                    color: 0.7, 0.7, 0.8, 1
+                    color: app.color_text_muted
                     halign: 'left'
+                    valign: 'middle'
                     text_size: self.size
-                    valign: 'center'
-                CheckBox:
-                    id: ai_toggle
-                    active: root.ai_enabled
-                    size_hint_x: 0.2
-                    on_active: root.toggle_ai(self.active)
+                FlatButton:
+                    text: "ON" if root.ai_enabled else "OFF"
+                    size_hint_x: None
+                    width: dp(72)
+                    height: dp(36)
+                    radius: self.height / 2
+                    bg: app.color_accent if root.ai_enabled else app.color_surface_alt
+                    on_release: root.toggle_ai(not root.ai_enabled)
 
-            # API key display
-            Label:
+            SectionLabel:
                 text: "API Key: " + root.api_key_display
-                font_size: sp(13)
-                color: 0.5, 0.5, 0.6, 1
-                size_hint_y: None
-                height: dp(24)
 
-            # API key input
-            TextInput:
+            ThemeInput:
                 id: api_key_input
                 hint_text: "Paste your Gemini API key"
-                font_size: sp(14)
-                multiline: False
                 password: True
+                font_size: sp(14)
+                height: dp(46)
+
+            FlatButton:
+                text: "Save API Key"
+                bg: app.color_accent
                 size_hint_y: None
                 height: dp(44)
-                padding: dp(10)
-                background_color: 0.15, 0.15, 0.2, 1
-                foreground_color: 1, 1, 1, 1
-                hint_text_color: 0.4, 0.4, 0.5, 1
-
-            Button:
-                text: "Save API Key"
-                font_size: sp(14)
-                size_hint_y: None
-                height: dp(40)
-                background_color: 0.2, 0.5, 0.7, 1
-                color: 1, 1, 1, 1
                 on_release: root.save_api_key(api_key_input.text)
 
-        # Automatic capture
-        Button:
-            text: "Grant Notification Access"
-            font_size: sp(14)
+        # Automatic capture card
+        Card:
             size_hint_y: None
-            height: dp(44)
-            background_normal: ''
-            background_color: 0.25, 0.35, 0.5, 1
-            color: 1, 1, 1, 1
-            on_release: root.open_notification_access()
+            height: dp(120)
+            spacing: dp(10)
 
-        Label:
-            text: "Needed to auto-read UPI app notifications.\nSMS alerts are read automatically once allowed."
-            font_size: sp(12)
-            color: 0.4, 0.4, 0.5, 1
-            halign: 'center'
-            size_hint_y: None
-            height: dp(36)
+            Label:
+                text: "Automatic Capture"
+                font_size: sp(17)
+                bold: True
+                color: app.color_text
+                halign: 'left'
+                valign: 'middle'
+                text_size: self.width, None
+                size_hint_y: None
+                height: dp(28)
 
-        # Info
-        Label:
-            text: "AI powers: smart categorization,\ndaily spending summary, spending insights."
-            font_size: sp(13)
-            color: 0.4, 0.4, 0.5, 1
-            halign: 'center'
-            size_hint_y: None
-            height: dp(40)
+            FlatButton:
+                text: "Grant Notification Access"
+                bg: app.color_surface_alt
+                size_hint_y: None
+                height: dp(44)
+                on_release: root.open_notification_access()
 
-        Label:
-            text: "Without AI, the app uses rule-based\ncategorization - no API key needed."
-            font_size: sp(12)
-            color: 0.35, 0.35, 0.45, 1
-            halign: 'center'
-            size_hint_y: None
-            height: dp(40)
+            SectionLabel:
+                text: "Lets the app auto-read UPI notifications. SMS is read once allowed."
+                height: dp(20)
 
         Widget:

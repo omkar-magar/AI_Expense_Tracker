@@ -43,8 +43,20 @@ public class NotificationListener extends NotificationListenerService {
             return;
         }
 
-        CharSequence bodyCs = sbn.getNotification().extras.getCharSequence("android.text");
-        String body = bodyCs != null ? bodyCs.toString() : "";
+        // Payment apps scatter the amount across different extras: PhonePe often
+        // puts "Paid ₹230 to X" in the title or the expanded (bigText) view, not
+        // android.text. Combine title + best-available body so the Python parser
+        // sees the amount wherever the app placed it.
+        android.os.Bundle extras = sbn.getNotification().extras;
+        CharSequence titleCs = extras.getCharSequence("android.title");
+        CharSequence bigCs = extras.getCharSequence("android.bigText");
+        CharSequence textCs = extras.getCharSequence("android.text");
+
+        String title = titleCs != null ? titleCs.toString() : "";
+        String detail = bigCs != null ? bigCs.toString()
+                        : (textCs != null ? textCs.toString() : "");
+
+        String body = (title + " " + detail).trim();
         if (body.isEmpty()) {
             return;
         }

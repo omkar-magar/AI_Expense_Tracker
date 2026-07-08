@@ -8,7 +8,7 @@ through this manager — no direct sqlite3 imports elsewhere.
 import os
 import sqlite3
 
-from database.schema import ALL_TABLES, DEFAULT_SETTINGS
+from database.schema import ALL_TABLES, DEFAULT_SETTINGS, COLUMN_MIGRATIONS
 
 
 DB_FILENAME = "expense_tracker.db"
@@ -36,12 +36,21 @@ class DatabaseManager:
         cursor = self.conn.cursor()
         for table_sql in ALL_TABLES:
             cursor.execute(table_sql)
+        self._run_migrations(cursor)
         for key, value in DEFAULT_SETTINGS.items():
             cursor.execute(
                 "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
                 (key, value),
             )
         self.conn.commit()
+
+    def _run_migrations(self, cursor):
+        """Add columns introduced after a DB was first created (idempotent)."""
+        for table, column, alter_sql in COLUMN_MIGRATIONS:
+            cursor.execute("PRAGMA table_info(%s)" % table)
+            existing = {row[1] for row in cursor.fetchall()}
+            if column not in existing:
+                cursor.execute(alter_sql)
 
     def execute(self, sql, params=None):
         cursor = self.conn.cursor()

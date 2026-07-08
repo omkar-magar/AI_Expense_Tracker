@@ -1,0 +1,102 @@
+<ReviewScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(16)
+        spacing: dp(12)
+        canvas.before:
+            Color:
+                rgba: app.color_bg
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        ScreenHeader:
+            title: "Review Inbox"
+
+        Label:
+            text: "Auto-detected payments. Confirm to count them toward spending."
+            font_size: sp(12)
+            color: app.color_text_muted
+            size_hint_y: None
+            height: dp(30)
+            halign: 'center'
+            text_size: self.width, None
+
+        # Empty state
+        Label:
+            text: "Nothing to review\nNew SMS / UPI payments will appear here"
+            font_size: sp(15)
+            color: app.color_text_muted
+            halign: 'center'
+            valign: 'middle'
+            text_size: self.width, None
+            opacity: 0 if root.transactions else 1
+            size_hint_y: None
+            height: dp(0) if root.transactions else dp(120)
+
+        # Pending list
+        ScrollView:
+            RecycleView:
+                data: [{'txn_id': t.get('id', 0), 'title': "Rs.{:.0f}  -  {}".format(t.get('amount', 0), t.get('merchant') or 'Unknown'), 'detail': "{}  |  {}  |  {}".format(t.get('category', 'Other'), t.get('source_app', ''), (t.get('txn_time', '') or '')[:5])} for t in root.transactions]
+                viewclass: 'ReviewItem'
+                RecycleBoxLayout:
+                    orientation: 'vertical'
+                    default_size: None, dp(96)
+                    default_size_hint: 1, None
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: dp(8)
+
+
+<ReviewItem@BoxLayout>:
+    orientation: 'vertical'
+    txn_id: 0
+    title: ''
+    detail: ''
+    size_hint_y: None
+    height: dp(96)
+    padding: dp(12), dp(8)
+    spacing: dp(6)
+    canvas.before:
+        Color:
+            rgba: app.color_surface_alt
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(10)]
+
+    Label:
+        text: root.title
+        font_size: sp(15)
+        bold: True
+        color: app.color_text
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.width, None
+    Label:
+        text: root.detail
+        font_size: sp(12)
+        color: app.color_text_muted
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.width, None
+
+    BoxLayout:
+        size_hint_y: None
+        height: dp(34)
+        spacing: dp(8)
+        FlatButton:
+            text: "Confirm"
+            bg: app.color_accent
+            font_size: sp(13)
+            on_release: app.root.get_screen('review').confirm(root.txn_id)
+        FlatButton:
+            text: "Edit"
+            bg: app.color_surface
+            font_size: sp(13)
+            on_release: app.root.get_screen('review').edit(root.txn_id)
+        FlatButton:
+            text: "Dismiss"
+            bg: [0.40, 0.09, 0.24, 1]
+            font_size: sp(13)
+            on_release: app.root.get_screen('review').dismiss_txn(root.txn_id)

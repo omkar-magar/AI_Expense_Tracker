@@ -17,7 +17,12 @@ class TransactionService:
         self.ai_service = ai_service
 
     def process_notification(self, text: str, package_name: str = None) -> dict | None:
-        """Full pipeline: parse → dedup → categorize → save."""
+        """Full pipeline: parse → dedup → categorize → save as 'pending'.
+
+        Auto-captured transactions are stored as 'pending' so the user reviews
+        them before they count toward spending (see the review inbox). Manual
+        entries go straight to 'confirmed' via add_manual_transaction.
+        """
         txn = parse_notification(text, package_name)
 
         if txn is None:
@@ -33,8 +38,9 @@ class TransactionService:
                 txn.get("merchant"), txn["raw_notification"]
             )
 
-        txn_id = insert_transaction(self.db, txn)
+        txn_id = insert_transaction(self.db, txn, status="pending")
         txn["id"] = txn_id
+        txn["status"] = "pending"
 
         log_notification(self.db, package_name, None, text, processed=1, txn_id=txn_id)
 

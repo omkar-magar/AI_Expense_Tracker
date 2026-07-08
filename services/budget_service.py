@@ -29,6 +29,14 @@ class BudgetService:
     def is_limit_exceeded(self) -> bool:
         return self.get_today_total() >= self.get_daily_limit()
 
+    def would_exceed(self, extra_amount: float) -> bool:
+        """Whether adding `extra_amount` to today's confirmed spend crosses the
+        limit — used to warn on a freshly captured (still pending) debit."""
+        limit = self.get_daily_limit()
+        if limit <= 0:
+            return False
+        return (self.get_today_total() + float(extra_amount)) >= limit
+
     def get_budget_summary(self) -> dict:
         limit = self.get_daily_limit()
         total = self.get_today_total()

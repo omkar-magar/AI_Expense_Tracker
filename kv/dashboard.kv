@@ -1,197 +1,390 @@
 <DashboardScreen>:
-    BoxLayout:
-        orientation: 'vertical'
-        padding: dp(16)
-        spacing: dp(12)
+    FloatLayout:
         canvas.before:
             Color:
-                rgba: 0.12, 0.12, 0.18, 1
+                rgba: app.color_bg
             Rectangle:
                 pos: self.pos
                 size: self.size
 
-        # Header
-        Label:
-            text: root.today_date
-            font_size: sp(16)
-            color: 0.7, 0.7, 0.8, 1
-            size_hint_y: None
-            height: dp(30)
+        # Slow animated aurora wash behind everything
+        AuroraBackground:
+            size_hint: 1, 1
+            pos_hint: {'x': 0, 'y': 0}
 
-        # Budget card
         BoxLayout:
             orientation: 'vertical'
-            size_hint_y: None
-            height: dp(140)
-            padding: dp(16)
-            spacing: dp(8)
-            canvas.before:
-                Color:
-                    rgba: 0.18, 0.18, 0.25, 1
-                RoundedRectangle:
-                    pos: self.pos
-                    size: self.size
-                    radius: [dp(12)]
+            size_hint: 1, 1
+            pos_hint: {'x': 0, 'y': 0}
+            padding: dp(18)
+            spacing: dp(14)
 
-            Label:
-                text: "Today's Spending"
-                font_size: sp(14)
-                color: 0.6, 0.6, 0.7, 1
-                size_hint_y: None
-                height: dp(24)
-
-            Label:
-                text: "Rs. {:.0f}".format(root.today_total)
-                font_size: sp(36)
-                bold: True
-                color: 1, 1, 1, 1
-                size_hint_y: None
-                height: dp(50)
-
+            # ---- Premium header ----
             BoxLayout:
                 size_hint_y: None
-                height: dp(24)
+                height: dp(52)
+                spacing: dp(10)
+                BoxLayout:
+                    orientation: 'vertical'
+                    Label:
+                        text: root.greeting
+                        font_size: sp(22)
+                        bold: True
+                        color: app.color_text
+                        halign: 'left'
+                        valign: 'bottom'
+                        text_size: self.width, None
+                    Label:
+                        text: root.header_date
+                        font_size: sp(13)
+                        color: app.color_text_muted
+                        halign: 'left'
+                        valign: 'top'
+                        text_size: self.width, None
+                # AI badge pill
+                BoxLayout:
+                    size_hint: None, None
+                    width: dp(62)
+                    height: dp(30)
+                    pos_hint: {'center_y': 0.5}
+                    padding: dp(9), 0
+                    spacing: dp(6)
+                    canvas.before:
+                        Color:
+                            rgba: app.color_accent[0], app.color_accent[1], app.color_accent[2], 0.16
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [dp(15)]
+                        Color:
+                            rgba: app.color_accent[0], app.color_accent[1], app.color_accent[2], 0.45
+                        Line:
+                            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(15))
+                            width: 1
+                    PulseDot:
+                        size_hint_x: None
+                        width: dp(10)
+                        dot_color: app.color_cyan
+                    Label:
+                        text: "AI"
+                        bold: True
+                        font_size: sp(13)
+                        color: app.color_text
+
+            # ---- Glass hero card ----
+            BoxLayout:
+                size_hint_y: None
+                height: dp(176)
+                padding: dp(20)
+                spacing: dp(12)
+                canvas.before:
+                    Color:
+                        rgba: 0.10, 0.10, 0.12, 0.72
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [dp(26)]
+                    Color:
+                        rgba: app.color_accent[0], app.color_accent[1], app.color_accent[2], 0.30
+                    Line:
+                        rounded_rectangle: (self.x, self.y, self.width, self.height, dp(26))
+                        width: 1.2
+
+                # left: label + animated amount + limit/remaining + badge
+                BoxLayout:
+                    orientation: 'vertical'
+                    spacing: dp(4)
+                    Label:
+                        text: "Today's Spending"
+                        font_size: sp(13)
+                        color: app.color_text_muted
+                        halign: 'left'
+                        valign: 'middle'
+                        text_size: self.width, None
+                        size_hint_y: None
+                        height: dp(22)
+                    Label:
+                        text: "₹ {:,.0f}".format(root.anim_total)
+                        font_size: sp(38)
+                        bold: True
+                        color: app.color_text
+                        halign: 'left'
+                        valign: 'middle'
+                        text_size: self.width, None
+                        size_hint_y: None
+                        height: dp(52)
+                    Label:
+                        text: "Limit ₹{:,.0f}    ·    Left ₹{:,.0f}".format(root.daily_limit, root.remaining)
+                        font_size: sp(12)
+                        color: app.color_text_muted
+                        halign: 'left'
+                        valign: 'middle'
+                        text_size: self.width, None
+                        size_hint_y: None
+                        height: dp(20)
+                    Widget:
+                        size_hint_y: None
+                        height: dp(6)
+                    # glowing status badge
+                    Label:
+                        text: root.status_text
+                        bold: True
+                        font_size: sp(12)
+                        color: root.status_color
+                        size_hint: None, None
+                        height: dp(28)
+                        width: self.texture_size[0] + dp(26)
+                        canvas.before:
+                            Color:
+                                rgba: root.status_color[0], root.status_color[1], root.status_color[2], 0.16
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [dp(14)]
+                            Color:
+                                rgba: root.status_color[0], root.status_color[1], root.status_color[2], 0.45
+                            Line:
+                                rounded_rectangle: (self.x, self.y, self.width, self.height, dp(14))
+                                width: 1
+
+                # right: circular budget ring with % in the center
+                FloatLayout:
+                    size_hint_x: None
+                    width: dp(116)
+                    CircularProgress:
+                        progress: root.budget_fraction
+                        fg_color: root.status_color
+                        size_hint: None, None
+                        size: dp(108), dp(108)
+                        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+                    BoxLayout:
+                        orientation: 'vertical'
+                        size_hint: None, None
+                        size: dp(108), dp(108)
+                        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+                        Label:
+                            text: "{:.0f}%".format(root.budget_fraction * 100)
+                            font_size: sp(21)
+                            bold: True
+                            color: app.color_text
+                            valign: 'bottom'
+                            size_hint_y: None
+                            height: dp(30)
+                        Label:
+                            text: "used"
+                            font_size: sp(11)
+                            color: app.color_text_muted
+                            valign: 'top'
+                            size_hint_y: None
+                            height: dp(20)
+
+            # Review banner — only when auto-captured payments await review
+            GradientButton:
+                text: "Review {} auto-detected payment(s)   ›".format(root.pending_count)
+                grad_left: 0.16, 0.20, 0.42, 1
+                grad_right: 0.24, 0.16, 0.42, 1
+                radius: dp(16)
+                size_hint_y: None
+                height: dp(46) if root.pending_count else dp(0)
+                opacity: 1 if root.pending_count else 0
+                font_size: sp(14)
+                on_release: root.go_review()
+
+            # Compact AI insight strip
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: dp(64) if root.ai_summary else dp(0)
+                opacity: 1 if root.ai_summary else 0
+                padding: dp(14), dp(10)
+                canvas.before:
+                    Color:
+                        rgba: app.color_card_insight
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [dp(18)]
                 Label:
-                    text: "Limit: Rs. {:.0f}".format(root.daily_limit)
-                    font_size: sp(13)
-                    color: 0.5, 0.5, 0.6, 1
-                Label:
-                    text: "Remaining: Rs. {:.0f}".format(root.remaining)
-                    font_size: sp(13)
-                    color: root.status_color
+                    text: "[b]AI[/b]   " + root.ai_summary
+                    markup: True
+                    font_size: sp(12)
+                    color: 0.82, 0.80, 0.96, 1
+                    halign: 'left'
+                    valign: 'middle'
+                    text_size: self.size
 
-        # Status
-        Label:
-            text: root.status_text
-            font_size: sp(16)
-            bold: True
-            color: root.status_color
-            size_hint_y: None
-            height: dp(30)
-
-        # AI Summary card
-        BoxLayout:
-            orientation: 'vertical'
-            size_hint_y: None
-            height: dp(70) if root.ai_summary else dp(0)
-            opacity: 1 if root.ai_summary else 0
-            padding: dp(12)
-            spacing: dp(4)
-            canvas.before:
-                Color:
-                    rgba: 0.15, 0.2, 0.28, 1
-                RoundedRectangle:
-                    pos: self.pos
-                    size: self.size
-                    radius: [dp(10)]
+            # Section header
             Label:
-                text: root.ai_summary
-                font_size: sp(12)
-                color: 0.75, 0.85, 0.95, 1
-                halign: 'left'
-                valign: 'top'
-                text_size: self.size
-                size_hint_y: 1
-
-        # AI Insights card
-        BoxLayout:
-            orientation: 'vertical'
-            size_hint_y: None
-            height: dp(60) if root.ai_insights else dp(0)
-            opacity: 1 if root.ai_insights else 0
-            padding: dp(12)
-            spacing: dp(4)
-            canvas.before:
-                Color:
-                    rgba: 0.2, 0.18, 0.25, 1
-                RoundedRectangle:
-                    pos: self.pos
-                    size: self.size
-                    radius: [dp(10)]
-            Label:
-                text: root.ai_insights
-                font_size: sp(11)
-                color: 0.7, 0.7, 0.85, 1
-                halign: 'left'
-                valign: 'top'
-                text_size: self.size
-                size_hint_y: 1
-
-        # Transaction list header
-        BoxLayout:
-            size_hint_y: None
-            height: dp(30)
-            Label:
-                text: "Today's Transactions"
+                text: "Recent Transactions"
                 font_size: sp(15)
                 bold: True
-                color: 0.8, 0.8, 0.9, 1
+                color: app.color_text
                 halign: 'left'
-                text_size: self.size
+                valign: 'middle'
+                text_size: self.width, None
+                size_hint_y: None
+                height: dp(26)
 
-        # Transaction list
-        ScrollView:
-            size_hint_y: 1
-            RecycleView:
-                id: txn_list
-                data: [{'text': "Rs.{:.0f} - {} [{}]".format(t.get('amount',0), t.get('merchant','Unknown'), t.get('category','Other'))} for t in root.transactions]
-                viewclass: 'TxnLabel'
-                RecycleBoxLayout:
+            # Transactions OR empty state
+            FloatLayout:
+                size_hint_y: 1
+
+                ScrollView:
+                    size_hint: 1, 1
+                    opacity: 1 if root.transactions else 0
+                    RecycleView:
+                        id: txn_list
+                        data: [{'merchant': (t.get('merchant') or 'Unknown'), 'amount_text': "₹{:,.0f}".format(t.get('amount', 0)), 'category': t.get('category', 'Other'), 'time_text': (t.get('txn_time', '') or '')[:5]} for t in root.transactions]
+                        viewclass: 'TxnRow'
+                        RecycleBoxLayout:
+                            orientation: 'vertical'
+                            default_size: None, dp(58)
+                            default_size_hint: 1, None
+                            size_hint_y: None
+                            height: self.minimum_height
+                            spacing: dp(9)
+
+                # Premium empty state
+                BoxLayout:
                     orientation: 'vertical'
-                    default_size: None, dp(40)
-                    default_size_hint: 1, None
-                    size_hint_y: None
-                    height: self.minimum_height
-                    spacing: dp(4)
+                    size_hint: 1, 1
+                    opacity: 0 if root.transactions else 1
+                    spacing: dp(10)
+                    Widget:
+                    Widget:
+                        size_hint: None, None
+                        size: dp(78), dp(78)
+                        pos_hint: {'center_x': 0.5}
+                        canvas:
+                            Color:
+                                rgba: app.color_accent[0], app.color_accent[1], app.color_accent[2], 0.14
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [dp(22)]
+                        Label:
+                            text: "₹"
+                            bold: True
+                            font_size: sp(34)
+                            color: app.color_accent
+                            center: self.parent.center
+                    Label:
+                        text: "No transactions yet"
+                        font_size: sp(16)
+                        bold: True
+                        color: app.color_text
+                        size_hint_y: None
+                        height: dp(26)
+                    Label:
+                        text: "Your AI assistant is automatically\nmonitoring your expenses."
+                        font_size: sp(13)
+                        color: app.color_text_muted
+                        halign: 'center'
+                        valign: 'top'
+                        text_size: self.width, None
+                        size_hint_y: None
+                        height: dp(40)
+                    Widget:
 
-        # Simulate button (for desktop testing)
-        Button:
-            text: "+ Simulate Notification"
-            size_hint_y: None
-            height: dp(42)
-            font_size: sp(14)
-            background_color: 0.2, 0.5, 0.3, 1
-            color: 1, 1, 1, 1
-            on_release: root.open_simulate_popup()
+            # ---- Primary action row ----
+            BoxLayout:
+                size_hint_y: None
+                height: dp(52)
+                spacing: dp(10)
+                GradientButton:
+                    text: "+  Add Expense"
+                    grad_left: app.color_accent
+                    grad_right: app.color_secondary
+                    font_size: sp(15)
+                    on_release: root.open_add_expense()
+                FlatButton:
+                    text: "Simulate"
+                    bg: app.color_surface_alt
+                    size_hint_x: None
+                    width: dp(118)
+                    on_release: root.open_simulate_popup()
 
-        # Navigation bar
-        BoxLayout:
-            size_hint_y: None
-            height: dp(50)
-            spacing: dp(8)
-
-            Button:
-                text: "Set Limit"
-                on_release: root.manager.current = 'limit'
-                background_color: 0.3, 0.3, 0.5, 1
-                color: 1, 1, 1, 1
-
-            Button:
-                text: "All Txns"
-                on_release: root.manager.current = 'transactions'
-                background_color: 0.3, 0.3, 0.5, 1
-                color: 1, 1, 1, 1
-
-            Button:
-                text: "Settings"
-                on_release: root.manager.current = 'settings'
-                background_color: 0.3, 0.3, 0.5, 1
-                color: 1, 1, 1, 1
+            # ---- Bottom navigation ----
+            BoxLayout:
+                size_hint_y: None
+                height: dp(50)
+                spacing: dp(8)
+                FlatButton:
+                    text: "Set Limit"
+                    bg: app.color_surface_alt
+                    on_release: root.manager.current = 'limit'
+                FlatButton:
+                    text: "All Txns"
+                    bg: app.color_surface_alt
+                    on_release: root.manager.current = 'transactions'
+                FlatButton:
+                    text: "Settings"
+                    bg: app.color_surface_alt
+                    on_release: root.manager.current = 'settings'
 
 
-<TxnLabel@Label>:
-    text: ''
-    font_size: sp(14)
-    color: 0.85, 0.85, 0.9, 1
-    halign: 'left'
-    valign: 'middle'
-    text_size: self.size
+# Card-style transaction row: category dot | merchant + category/time | amount.
+<TxnRow@BoxLayout>:
+    merchant: ''
+    amount_text: ''
+    category: ''
+    time_text: ''
     size_hint_y: None
-    height: dp(40)
+    height: dp(58)
+    padding: dp(14), dp(8)
+    spacing: dp(12)
     canvas.before:
         Color:
-            rgba: 0.2, 0.2, 0.28, 1
+            rgba: app.color_surface
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: [dp(6)]
+            radius: [dp(16)]
+
+    # category icon chip
+    Widget:
+        size_hint_x: None
+        width: dp(38)
+        canvas:
+            Color:
+                rgba: app.category_color(root.category)[0], app.category_color(root.category)[1], app.category_color(root.category)[2], 0.18
+            RoundedRectangle:
+                pos: self.center_x - dp(19), self.center_y - dp(19)
+                size: dp(38), dp(38)
+                radius: [dp(12)]
+            Color:
+                rgba: app.category_color(root.category)
+            Ellipse:
+                pos: self.center_x - dp(5), self.center_y - dp(5)
+                size: dp(10), dp(10)
+
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: root.merchant
+            font_size: sp(15)
+            bold: True
+            color: app.color_text
+            halign: 'left'
+            valign: 'bottom'
+            text_size: self.width, None
+            shorten: True
+            shorten_from: 'right'
+        Label:
+            text: root.category + ("  ·  " + root.time_text if root.time_text else "")
+            font_size: sp(12)
+            color: app.color_text_muted
+            halign: 'left'
+            valign: 'top'
+            text_size: self.width, None
+
+    Label:
+        text: root.amount_text
+        font_size: sp(16)
+        bold: True
+        color: app.color_text
+        size_hint_x: None
+        width: dp(96)
+        halign: 'right'
+        valign: 'middle'
+        text_size: self.width, None

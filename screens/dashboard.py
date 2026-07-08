@@ -6,7 +6,7 @@ AI-powered summary/insights, and a preview list of today's transactions.
 Includes a simulate button for desktop testing.
 """
 
-from datetime import date
+from datetime import date, datetime
 
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
@@ -15,6 +15,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.label import Label
+from kivy.animation import Animation
 from kivy.properties import StringProperty, NumericProperty, ListProperty
 
 
@@ -33,14 +34,19 @@ SAMPLE_NOTIFICATIONS = [
 class DashboardScreen(Screen):
 
     today_date = StringProperty("")
+    greeting = StringProperty("Hello")
+    header_date = StringProperty("")
     daily_limit = NumericProperty(0)
     today_total = NumericProperty(0)
+    anim_total = NumericProperty(0)        # animated value shown in the hero
+    budget_fraction = NumericProperty(0)   # animated 0..1 for the progress ring
     remaining = NumericProperty(0)
     transactions = ListProperty([])
     status_text = StringProperty("Within budget")
-    status_color = ListProperty([0.2, 0.8, 0.2, 1])
+    status_color = ListProperty([0.133, 0.773, 0.369, 1])  # success; refreshed on_enter
     ai_summary = StringProperty("")
     ai_insights = StringProperty("")
+    pending_count = NumericProperty(0)
 
     def on_enter(self):
         self.refresh()
@@ -49,6 +55,8 @@ class DashboardScreen(Screen):
         app = App.get_running_app()
 
         self.today_date = date.today().strftime("%A, %d %B %Y")
+        self.header_date = date.today().strftime("%A, %d %b")
+        self.greeting = self._greeting()
 
         summary = app.budget_service.get_budget_summary()
         self.daily_limit = summary["daily_limit"]
@@ -56,19 +64,42 @@ class DashboardScreen(Screen):
         self.remaining = summary["remaining"]
 
         if summary["exceeded"]:
-            self.status_text = "LIMIT EXCEEDED!"
-            self.status_color = [0.9, 0.2, 0.2, 1]
+            self.status_text = "Over budget"
+            self.status_color = app.color_danger
         else:
             self.status_text = "Within budget"
-            self.status_color = [0.2, 0.8, 0.2, 1]
+            self.status_color = app.color_good
 
-        from database.queries import get_today_transactions
+        # Animate the amount counting up and the budget ring filling.
+        limit = summary["daily_limit"]
+        frac = min(1.0, summary["today_total"] / limit) if limit > 0 else 0.0
+        Animation.cancel_all(self, "anim_total", "budget_fraction")
+        Animation(anim_total=summary["today_total"], budget_fraction=frac,
+                  d=0.7, t="out_quad").start(self)
+
+        from database.queries import get_today_transactions, pending_count
         self.transactions = get_today_transactions(app.db)
+        self.pending_count = pending_count(app.db)
 
         self.ai_summary = app.ai_service.get_daily_summary(self.transactions, summary)
         self.ai_insights = app.ai_service.get_insights(self.transactions)
 
         app.notification_service.set_dashboard_callback(self.refresh)
+
+    def _greeting(self):
+        h = datetime.now().hour
+        if h < 12:
+            return "Good morning"
+        if h < 17:
+            return "Good afternoon"
+        return "Good evening"
+
+    def open_add_expense(self):
+        from screens.txn_editor import open_txn_editor
+        open_txn_editor(self.refresh)
+
+    def go_review(self):
+        self.manager.current = "review"
 
     def open_simulate_popup(self):
         content = BoxLayout(orientation='vertical', spacing=10, padding=10)

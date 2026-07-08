@@ -32,19 +32,32 @@ class NotificationBridge:
         self._event = None
         self._queue_path = None
 
-    def start(self):
+    def setup(self) -> bool:
+        """Resolve the queue file path. Shared by the in-app Clock loop and the
+        background service loop. Returns True if ready to drain."""
         if platform != "android":
             print("[NotificationBridge] Not on Android — use Simulate for testing")
-            return
+            return False
         try:
             from jnius import autoclass
             activity = autoclass("org.kivy.android.PythonActivity").mActivity
             files_dir = activity.getFilesDir().getAbsolutePath()
             self._queue_path = os.path.join(files_dir, QUEUE_FILENAME)
-            self._event = Clock.schedule_interval(self._drain_queue, POLL_INTERVAL_SECONDS)
-            print("[NotificationBridge] Started, watching %s" % self._queue_path)
+            return True
         except Exception as e:
-            print("[NotificationBridge] Failed to start: %s" % e)
+            print("[NotificationBridge] setup failed: %s" % e)
+            return False
+
+    def drain_once(self):
+        """Run one queue-drain pass (for the headless background service loop)."""
+        self._drain_queue(0)
+
+    def start(self):
+        """Set up and schedule draining on Kivy's Clock (in-app, foreground)."""
+        if not self.setup():
+            return
+        self._event = Clock.schedule_interval(self._drain_queue, POLL_INTERVAL_SECONDS)
+        print("[NotificationBridge] Started, watching %s" % self._queue_path)
 
     def stop(self):
         if self._event is not None:

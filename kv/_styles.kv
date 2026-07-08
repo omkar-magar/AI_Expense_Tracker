@@ -1,0 +1,100 @@
+#:import dp kivy.metrics.dp
+# Shared modern component library. Loads before the other kv files (underscore
+# sorts first), so every screen can use these. Colors come from app.color_*.
+
+
+# Flat, rounded button with press feedback. `bg` = fill, `radius` = corner
+# rounding (set radius: self.height/2 for a pill). Class is in main.py.
+<FlatButton>:
+    background_normal: ''
+    background_down: ''
+    background_color: 0, 0, 0, 0
+    color: app.color_text
+    font_size: sp(14)
+    bold: True
+    canvas.before:
+        Color:
+            rgba: (self.bg[0] * 0.72, self.bg[1] * 0.72, self.bg[2] * 0.72, 1) if self.state == 'down' else self.bg
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.radius]
+
+
+# Rounded surface card. Override `bg` and `radius` as needed. The `or`/if
+# fallbacks avoid a None on the first canvas pass (kv-declared dynamic-class
+# properties default to None before their value is assigned).
+<Card@BoxLayout>:
+    orientation: 'vertical'
+    bg: app.color_surface
+    radius: dp(18)
+    padding: dp(16)
+    spacing: dp(10)
+    canvas.before:
+        Color:
+            rgba: self.bg or app.color_surface
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.radius if self.radius else dp(18)]
+
+
+# Themed text field: dark rounded surface, accent cursor, no default underline.
+<ThemeInput@TextInput>:
+    multiline: False
+    background_normal: ''
+    background_active: ''
+    background_color: 0, 0, 0, 0
+    foreground_color: app.color_text
+    cursor_color: app.color_accent
+    hint_text_color: app.color_text_muted
+    selection_color: app.color_accent[:3] + [0.35]
+    font_size: sp(16)
+    padding: [dp(14), dp(12), dp(14), dp(12)]
+    size_hint_y: None
+    height: dp(50)
+    canvas.before:
+        Color:
+            rgba: app.color_surface_alt
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(12)]
+
+
+# Small muted section/caption label, left-aligned.
+<SectionLabel@Label>:
+    color: app.color_text_muted
+    font_size: sp(12)
+    halign: 'left'
+    valign: 'middle'
+    size_hint_y: None
+    height: dp(22)
+    text_size: self.width, None
+
+
+# Screen header row: a back chevron + centered title. Set `title` and, if the
+# back target isn't the dashboard, `target`.
+<ScreenHeader@BoxLayout>:
+    title: ''
+    target: 'dashboard'
+    size_hint_y: None
+    height: dp(52)
+    Button:
+        text: "‹  Back"
+        size_hint_x: None
+        width: dp(96)
+        background_normal: ''
+        background_color: 0, 0, 0, 0
+        color: app.color_accent
+        font_size: sp(15)
+        bold: True
+        on_release: app.root.current = root.target
+    Label:
+        text: root.title
+        font_size: sp(19)
+        bold: True
+        color: app.color_text
+    Widget:
+        size_hint_x: None
+        width: dp(96)

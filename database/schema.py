@@ -26,9 +26,18 @@ CREATE TABLE IF NOT EXISTS transactions (
     txn_type          TEXT NOT NULL,       -- 'debit' or 'credit'
     category          TEXT DEFAULT 'Other',
     raw_notification  TEXT,
+    status            TEXT DEFAULT 'confirmed',  -- 'pending' (awaiting review) or 'confirmed'
     created_at        TEXT DEFAULT (datetime('now', 'localtime'))
 );
 """
+
+# Idempotent column migrations for databases created by an earlier schema.
+# Each entry: (table, column, "ALTER TABLE ..." statement). Applied only when
+# the column is missing, so re-running is safe.
+COLUMN_MIGRATIONS = [
+    ("transactions", "status",
+     "ALTER TABLE transactions ADD COLUMN status TEXT DEFAULT 'confirmed'"),
+]
 
 CREATE_NOTIFICATION_LOGS_TABLE = """
 CREATE TABLE IF NOT EXISTS notification_logs (

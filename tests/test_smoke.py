@@ -55,12 +55,18 @@ class TestSmoke(unittest.TestCase):
         self.assertEqual(txn["category"], "Food")
 
     def test_notification_service_full_flow(self):
+        from database.queries import get_pending_transactions, confirm_transaction
         ai = AIService()
         txn_svc = TransactionService(self.db, ai)
         budget = BudgetService(self.db)
         alert = AlertService()
         notif = NotificationService(txn_svc, budget, alert)
         notif.on_notification_received("Paid Rs.100 to Zomato", "com.phonepe.app")
+        # Auto-captured -> pending: not counted until the user confirms it.
+        self.assertEqual(budget.get_today_total(), 0.0)
+        pending = get_pending_transactions(self.db)
+        self.assertEqual(len(pending), 1)
+        confirm_transaction(self.db, pending[0]["id"])
         self.assertEqual(budget.get_today_total(), 100.0)
 
     # --- Limit screen edge cases ---
@@ -126,11 +132,17 @@ class TestSmoke(unittest.TestCase):
     # --- Budget alert ---
 
     def test_limit_exceeded_triggers(self):
+        from database.queries import get_pending_transactions, confirm_transaction
         budget = BudgetService(self.db)
         budget.set_daily_limit(100)
         ai = AIService()
         txn_svc = TransactionService(self.db, ai)
         txn_svc.process_notification("Paid Rs.150 to Swiggy", "com.phonepe.app")
+        # A freshly captured (pending) debit that would cross the limit still
+        # warns via the projected check, even before it is confirmed.
+        self.assertTrue(budget.would_exceed(150))
+        # Once confirmed, it counts and is_limit_exceeded is true.
+        confirm_transaction(self.db, get_pending_transactions(self.db)[0]["id"])
         self.assertTrue(budget.is_limit_exceeded())
 
     # --- Settings persistence ---

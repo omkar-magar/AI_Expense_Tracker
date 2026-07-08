@@ -52,8 +52,35 @@ if ON_ANDROID:
 
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, FadeTransition
+from kivy.uix.button import Button
 from kivy.lang import Builder
 from kivy.clock import Clock
+from kivy.factory import Factory
+from kivy.properties import ListProperty, NumericProperty
+
+
+class FlatButton(Button):
+    """Button whose fill color is a real ListProperty (`bg`), so the kv canvas
+    rule can reference `self.bg` safely from the first frame — a kv-declared
+    dynamic-class property defaults to None and would crash Color.rgba.
+
+    `radius` controls the corner rounding (set to self.height/2 for a pill)."""
+
+    bg = ListProperty([0.408, 0.353, 0.949, 1])
+    radius = NumericProperty(12)
+
+
+# Register so `FlatButton:` / `<FlatButton>:` resolve in kv (must run before kv load).
+Factory.register("FlatButton", cls=FlatButton)
+
+# Premium UI toolkit (aurora bg, gradient button, circular progress, pulse dot).
+from premium_ui import (  # noqa: E402
+    AuroraBackground, GradientButton, CircularProgress, PulseDot,
+)
+Factory.register("AuroraBackground", cls=AuroraBackground)
+Factory.register("GradientButton", cls=GradientButton)
+Factory.register("CircularProgress", cls=CircularProgress)
+Factory.register("PulseDot", cls=PulseDot)
 
 import glob
 
@@ -71,6 +98,7 @@ from screens.splash import SplashScreen
 from screens.dashboard import DashboardScreen
 from screens.limit import LimitScreen
 from screens.transactions import TransactionsScreen
+from screens.review import ReviewScreen
 from screens.settings import SettingsScreen
 
 
@@ -78,6 +106,39 @@ class ExpenseTrackerApp(App):
     """Main Kivy application class."""
 
     title = "AI Expense Tracker"
+
+    # --- Theme palette: single source of truth for colors. Reference these in
+    # any .kv as `app.color_*` so the whole app can be re-skinned in one place.
+    # Premium fintech scheme: near-black ground, indigo→violet gradient accent,
+    # cyan highlight (CRED / Jupiter / Revolut territory).
+    color_bg = ListProperty([0.035, 0.035, 0.043, 1])       # #09090B ground
+    color_surface = ListProperty([0.094, 0.094, 0.106, 1])  # #18181B cards
+    color_surface_alt = ListProperty([0.137, 0.137, 0.153, 1])  # #232327 rows/nav
+    color_glass = ListProperty([1, 1, 1, 0.05])             # rgba(255,255,255,.05) glass
+    color_card_info = ListProperty([0.043, 0.145, 0.176, 1])    # cyan-tinted
+    color_card_insight = ListProperty([0.114, 0.075, 0.200, 1])  # violet-tinted
+    color_accent = ListProperty([0.388, 0.400, 0.945, 1])   # #6366F1 indigo (primary)
+    color_secondary = ListProperty([0.486, 0.227, 0.929, 1])  # #7C3AED violet
+    color_cyan = ListProperty([0.024, 0.714, 0.831, 1])     # #06B6D4 cyan accent
+    color_good = ListProperty([0.133, 0.773, 0.369, 1])     # #22C55E success
+    color_warning = ListProperty([0.961, 0.620, 0.043, 1])  # #F59E0B warning
+    color_text = ListProperty([1, 1, 1, 1])                 # white primary text
+    color_text_muted = ListProperty([0.631, 0.631, 0.667, 1])  # #A1A1AA secondary
+    color_danger = ListProperty([0.937, 0.267, 0.267, 1])   # #EF4444 danger (over/delete)
+
+    # Category → dot color (keys match services.ai_service.CATEGORIES).
+    CATEGORY_COLORS = {
+        "Food": [0.976, 0.451, 0.086, 1],          # orange
+        "Travel": [0.024, 0.714, 0.831, 1],        # cyan
+        "Shopping": [0.388, 0.400, 0.945, 1],      # indigo
+        "Recharge": [0.133, 0.773, 0.369, 1],      # green
+        "Bills": [0.925, 0.286, 0.600, 1],         # pink
+        "Entertainment": [0.545, 0.361, 0.965, 1],  # violet
+    }
+
+    def category_color(self, category):
+        """rgba dot color for a category (falls back to neutral grey)."""
+        return self.CATEGORY_COLORS.get(category, [0.50, 0.55, 0.65, 1])
 
     def build(self):
         self._configure_keyboard()
@@ -89,6 +150,7 @@ class ExpenseTrackerApp(App):
         self.sm.add_widget(DashboardScreen(name="dashboard"))
         self.sm.add_widget(LimitScreen(name="limit"))
         self.sm.add_widget(TransactionsScreen(name="transactions"))
+        self.sm.add_widget(ReviewScreen(name="review"))
         self.sm.add_widget(SettingsScreen(name="settings"))
 
         Clock.schedule_once(self._after_init, 2)
@@ -128,7 +190,7 @@ class ExpenseTrackerApp(App):
 
         # Automatic transaction capture (Android only; inert on desktop).
         self.notification_bridge = NotificationBridge(self.notification_service)
-        self.sms_reader = SmsReader(self.notification_service)
+        self.sms_reader = SmsReader(self.notification_service, self.db)
 
     def _request_android_permissions(self):
         """Request runtime permissions needed for automatic capture."""
@@ -139,8 +201,30 @@ class ExpenseTrackerApp(App):
             pass
 
     def _start_capture(self):
+        # In-app (foreground) pollers — instant capture while the UI is open.
         self.notification_bridge.start()
         self.sms_reader.start()
+        # Background service — keeps capturing when the app is closed. Safe to
+        # run alongside the in-app pollers (atomic queue + persisted sms_last_id
+        # prevent double processing).
+        self._start_background_service()
+
+    def _start_background_service(self):
+        """Start the p4a foreground capture service (service/capture.py).
+
+        p4a generates a service class named Service<Name> in the app package;
+        for `services = capture:...` that is `<domain>.<name>.ServiceCapture`.
+        """
+        try:
+            from jnius import autoclass
+            pkg = "com.expensetracker.expensetracker"  # package.domain + package.name
+            service = autoclass("%s.ServiceCapture" % pkg)
+            activity = autoclass("org.kivy.android.PythonActivity").mActivity
+            service.start(activity, "")
+            print("[App] Background capture service started")
+        except Exception as e:
+            # Non-fatal: in-app pollers still work while the app is open.
+            print("[App] Could not start background service: %s" % e)
 
     def _after_init(self, dt):
         from kivy.utils import platform

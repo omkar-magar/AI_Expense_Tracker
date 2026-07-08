@@ -2,38 +2,57 @@
     BoxLayout:
         orientation: 'vertical'
         padding: dp(40)
-        spacing: dp(20)
+        spacing: dp(16)
         canvas.before:
             Color:
-                rgba: 0.12, 0.12, 0.18, 1
+                rgba: app.color_bg
             Rectangle:
                 pos: self.pos
                 size: self.size
 
         Widget:
-            size_hint_y: 0.3
+            size_hint_y: 0.34
+
+        # Accent monogram tile
+        Widget:
+            size_hint: None, None
+            size: dp(84), dp(84)
+            pos_hint: {'center_x': 0.5}
+            canvas:
+                Color:
+                    rgba: app.color_accent
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [dp(22)]
+            Label:
+                text: "₹"
+                bold: True
+                font_size: sp(40)
+                color: 1, 1, 1, 1
+                center: self.parent.center
 
         Label:
             text: "AI Expense Tracker"
-            font_size: sp(28)
+            font_size: sp(27)
             bold: True
-            color: 1, 1, 1, 1
+            color: app.color_text
             size_hint_y: None
-            height: dp(50)
+            height: dp(46)
 
         Label:
             text: "Track. Budget. Save."
-            font_size: sp(16)
-            color: 0.6, 0.6, 0.7, 1
+            font_size: sp(15)
+            color: app.color_text_muted
             size_hint_y: None
-            height: dp(30)
+            height: dp(28)
 
         Widget:
-            size_hint_y: 0.3
+            size_hint_y: 0.34
 
         Label:
-            text: "Loading..."
-            font_size: sp(14)
-            color: 0.5, 0.5, 0.6, 1
+            text: "Loading…"
+            font_size: sp(13)
+            color: app.color_text_muted
             size_hint_y: None
-            height: dp(30)
+            height: dp(28)
